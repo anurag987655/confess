@@ -1,15 +1,32 @@
 const noBtn = document.getElementById('no-btn');
 const yesBtn = document.getElementById('yes-btn');
 const container = document.querySelector('.container');
+const stage = document.querySelector('.stage');
 const successMsg = document.getElementById('success-msg');
+const pleaMsg = document.getElementById('plea-msg');
+const bgHearts = document.getElementById('bg-hearts');
 
-const edgePadding = 16;
-const dangerRadius = 90;
+const edgePadding = 12;
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+const dangerRadius = isTouchDevice ? 110 : 85;
+
 let lastPointerX = window.innerWidth / 2;
 let lastPointerY = window.innerHeight / 2;
 let isFloating = false;
 let noAttempts = 0;
 let lastScaleTick = 0;
+let lastPleaIndex = -1;
+let sparkleCounter = 0;
+
+const floatingElements = ['❤', '💖', '💕', '🌸', '✨', '🌷', '🎀'];
+const pleaMessages = [
+    '🌸 Just one yes, pretty please? 🌸',
+    '🌷 Say yes once, I will keep you smiling 🌷',
+    '💐 Tiny yes, huge happiness deal? 💐',
+    '🌼 My shy heart picked only you 🌼',
+    '🌹 One little yes can make this day magical 🌹',
+    '🪷 Say yes and I will cherish you forever 🪷'
+];
 
 noBtn.tabIndex = -1;
 
@@ -20,33 +37,33 @@ function clamp(value, min, max) {
 function getBounds() {
     const btnWidth = noBtn.offsetWidth;
     const btnHeight = noBtn.offsetHeight;
-
-    const viewportMaxX = Math.max(0, window.innerWidth - btnWidth);
-    const viewportMaxY = Math.max(0, window.innerHeight - btnHeight);
-
-    // Keep padding when there is room; on tiny screens fall back to strict viewport bounds.
-    const minX = viewportMaxX >= edgePadding * 2 ? edgePadding : 0;
-    const minY = viewportMaxY >= edgePadding * 2 ? edgePadding : 0;
-    const maxX = viewportMaxX >= edgePadding * 2 ? viewportMaxX - edgePadding : viewportMaxX;
-    const maxY = viewportMaxY >= edgePadding * 2 ? viewportMaxY - edgePadding : viewportMaxY;
-
-    return { minX, minY, maxX, maxY, viewportMaxX, viewportMaxY };
+    const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const viewportMaxX = Math.max(0, vw - btnWidth);
+    const viewportMaxY = Math.max(0, vh - btnHeight);
+    const pad = Math.min(edgePadding, vw * 0.05);
+    const minX = viewportMaxX >= pad * 2 ? pad : 0;
+    const minY = viewportMaxY >= pad * 2 ? pad : 0;
+    const maxX = viewportMaxX >= pad * 2 ? viewportMaxX - pad : viewportMaxX;
+    const maxY = viewportMaxY >= pad * 2 ? viewportMaxY - pad : viewportMaxY;
+    return { minX, minY, maxX, maxY, viewportMaxX, viewportMaxY, vw, vh };
 }
 
 function ensureFloatingNoButton() {
-    if (isFloating) {
-        return;
-    }
+    if (isFloating) return;
 
     const rect = noBtn.getBoundingClientRect();
+
     document.body.appendChild(noBtn);
     noBtn.style.position = 'fixed';
-    noBtn.style.left = `${clamp(rect.left, 0, Math.max(0, window.innerWidth - rect.width))}px`;
-    noBtn.style.top = `${clamp(rect.top, 0, Math.max(0, window.innerHeight - rect.height))}px`;
+    noBtn.style.left = `${rect.left}px`;
+    noBtn.style.top = `${rect.top}px`;
     noBtn.style.zIndex = '9999';
     noBtn.style.margin = '0';
+    noBtn.style.pointerEvents = 'auto';
     isFloating = true;
 }
+
 
 function moveNoButton(pointerX = lastPointerX, pointerY = lastPointerY) {
     ensureFloatingNoButton();
@@ -55,138 +72,158 @@ function moveNoButton(pointerX = lastPointerX, pointerY = lastPointerY) {
     let newY = bounds.minY;
     let found = false;
 
-    // Try multiple random positions and keep one far from cursor.
-    for (let i = 0; i < 40; i += 1) {
+    for (let i = 0; i < 50; i += 1) {
         const candidateX = Math.floor(Math.random() * (bounds.maxX - bounds.minX + 1)) + bounds.minX;
         const candidateY = Math.floor(Math.random() * (bounds.maxY - bounds.minY + 1)) + bounds.minY;
         const centerX = candidateX + noBtn.offsetWidth / 2;
         const centerY = candidateY + noBtn.offsetHeight / 2;
         const distance = Math.hypot(pointerX - centerX, pointerY - centerY);
 
-        if (distance > dangerRadius * 1.35) {
+        if (distance > dangerRadius * 1.5) {
             newX = candidateX;
             newY = candidateY;
             found = true;
             break;
         }
     }
-
     if (!found) {
         newX = Math.floor((bounds.minX + bounds.maxX) / 2);
         newY = Math.floor((bounds.minY + bounds.maxY) / 2);
     }
-
-    newX = clamp(newX, bounds.minX, bounds.maxX);
-    newY = clamp(newY, bounds.minY, bounds.maxY);
-    newX = clamp(newX, 0, bounds.viewportMaxX);
-    newY = clamp(newY, 0, bounds.viewportMaxY);
-
-    noBtn.style.position = 'fixed';
     noBtn.style.left = `${newX}px`;
     noBtn.style.top = `${newY}px`;
-    noBtn.style.right = 'auto';
-    noBtn.style.bottom = 'auto';
-    noBtn.style.zIndex = '9999';
-    noBtn.style.transition = 'left 0.01s linear, top 0.01s linear';
+    noBtn.style.transition = 'left 0.15s ease-out, top 0.15s ease-out';
+}
+
+function createSparkle(x, y) {
+    sparkleCounter += 1;
+    if (sparkleCounter % 3 !== 0) return;
+
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle-trail';
+    sparkle.textContent = ['✨', '⭐', '💫', '🌸'][Math.floor(Math.random() * 4)];
+    sparkle.style.left = `${x}px`;
+    sparkle.style.top = `${y}px`;
+    document.body.appendChild(sparkle);
+    setTimeout(() => sparkle.remove(), 800);
 }
 
 function applyAttemptScaling() {
-    const yesScale = Math.min(1 + noAttempts * 0.28, 1.9);
-    const noScale = Math.max(1 - noAttempts * 0.22, 0.12);
-
+    const maxYesScale = isTouchDevice ? 1.6 : 2.0;
+    const yesScale = Math.min(1 + noAttempts * 0.15, maxYesScale);
+    const noScale = Math.max(1 - noAttempts * 0.1, 0.4);
     yesBtn.style.transform = `scale(${yesScale})`;
     noBtn.style.transform = `scale(${noScale})`;
 }
 
 function registerNoAttempt() {
+    // Float first so scaling never reflows the centered card layout.
+    ensureFloatingNoButton();
     noAttempts += 1;
     applyAttemptScaling();
 }
 
+function showPleaMessage() {
+    if (!pleaMsg || container.classList.contains('hidden')) return;
+    let nextIndex = Math.floor(Math.random() * pleaMessages.length);
+    if (pleaMessages.length > 1 && nextIndex === lastPleaIndex) {
+        nextIndex = (nextIndex + 1) % pleaMessages.length;
+    }
+    lastPleaIndex = nextIndex;
+    pleaMsg.textContent = pleaMessages[nextIndex];
+    pleaMsg.classList.remove('show');
+    void pleaMsg.offsetWidth;
+    pleaMsg.classList.add('show', 'pleading');
+}
+
+if (pleaMsg) pleaMsg.textContent = pleaMessages[0];
+
+function updatePointerAndEvade(pointerX, pointerY) {
+    lastPointerX = pointerX;
+    lastPointerY = pointerY;
+    createSparkle(pointerX, pointerY);
+    maybeEvade(pointerX, pointerY);
+}
+
+function handleTouchMove(event) {
+    if (!event.touches || event.touches.length === 0) return;
+    const touch = event.touches[0];
+    updatePointerAndEvade(touch.clientX, touch.clientY);
+}
+
+function spawnBackgroundElement() {
+    if (!bgHearts) return;
+    const el = document.createElement('span');
+    el.className = 'bg-heart';
+    el.textContent = floatingElements[Math.floor(Math.random() * floatingElements.length)];
+    el.style.left = `${Math.random() * 100}vw`;
+    el.style.fontSize = `${Math.random() * 15 + 12}px`;
+    el.style.animationDuration = `${Math.random() * 5 + 7}s`;
+    el.style.opacity = `${Math.random() * 0.4 + 0.3}`;
+    bgHearts.appendChild(el);
+    setTimeout(() => el.remove(), 12000);
+}
+
 function maybeEvade(pointerX, pointerY) {
     const rect = noBtn.getBoundingClientRect();
-
-    if (rect.width === 0 || rect.height === 0) {
-        return;
-    }
-
+    if (rect.width === 0) return;
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     const distance = Math.hypot(pointerX - centerX, pointerY - centerY);
-
     if (distance < dangerRadius) {
         const now = Date.now();
-        if (now - lastScaleTick > 60) {
+        if (now - lastScaleTick > 100) {
             registerNoAttempt();
             lastScaleTick = now;
         }
+        showPleaMessage();
         moveNoButton(pointerX, pointerY);
     }
 }
 
-noBtn.addEventListener('mouseenter', (event) => {
-    lastPointerX = event.clientX;
-    lastPointerY = event.clientY;
-    moveNoButton(lastPointerX, lastPointerY);
-});
-noBtn.addEventListener('mousemove', (event) => {
-    lastPointerX = event.clientX;
-    lastPointerY = event.clientY;
-    maybeEvade(event.clientX, event.clientY);
-});
-noBtn.addEventListener('touchstart', () => {
-    moveNoButton();
-}, { passive: true });
+noBtn.addEventListener('mouseenter', (event) => updatePointerAndEvade(event.clientX, event.clientY));
+noBtn.addEventListener('mousemove', (event) => updatePointerAndEvade(event.clientX, event.clientY));
+noBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    registerNoAttempt();
+    showPleaMessage();
+    moveNoButton(touch.clientX, touch.clientY);
+}, { passive: false });
 
-window.addEventListener('mousemove', (event) => {
-    lastPointerX = event.clientX;
-    lastPointerY = event.clientY;
-    maybeEvade(event.clientX, event.clientY);
-});
-window.addEventListener('resize', () => {
-    if (noBtn.style.position === 'fixed') {
-        moveNoButton();
-    }
-});
+window.addEventListener('mousemove', (e) => updatePointerAndEvade(e.clientX, e.clientY));
+window.addEventListener('touchmove', handleTouchMove, { passive: true });
+window.addEventListener('resize', () => { if (isFloating) moveNoButton(); });
 
-noBtn.addEventListener('click', (event) => {
-    event.preventDefault();
-    moveNoButton(lastPointerX, lastPointerY);
-});
+setInterval(spawnBackgroundElement, 500);
+for (let i = 0; i < 10; i += 1) setTimeout(spawnBackgroundElement, i * 200);
+
+noBtn.addEventListener('click', (e) => { e.preventDefault(); moveNoButton(); });
 
 yesBtn.addEventListener('click', () => {
     noBtn.style.display = 'none';
-    noBtn.style.pointerEvents = 'none';
     container.classList.add('hidden');
+    if (pleaMsg) pleaMsg.classList.add('hidden');
+    if (stage) stage.classList.add('hidden');
     successMsg.classList.remove('hidden');
-
-    triggerConfetti();
+    document.body.classList.add('love-mode');
+    for (let i = 0; i < 6; i += 1) setTimeout(triggerConfetti, i * 350);
 });
 
 function triggerConfetti() {
-    const colors = ['#ff0054', '#ff4d6d', '#ff758f', '#ff85a1', '#fbb1bd'];
-
-    for (let i = 0; i < 50; i += 1) {
-        const confetti = document.createElement('div');
-        confetti.style.position = 'fixed';
-        confetti.style.width = '10px';
-        confetti.style.height = '10px';
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.top = '-10px';
-        confetti.style.left = `${Math.random() * 100}vw`;
-        confetti.style.borderRadius = '50%';
-        confetti.style.zIndex = '2000';
-        confetti.style.transition = `transform ${Math.random() * 2 + 1}s linear, top ${Math.random() * 2 + 1}s linear`;
-
-        document.body.appendChild(confetti);
-
-        setTimeout(() => {
-            confetti.style.top = '110vh';
-            confetti.style.transform = `translateX(${Math.random() * 200 - 100}px) rotate(${Math.random() * 360}deg)`;
-        }, 10);
-
-        setTimeout(() => {
-            confetti.remove();
-        }, 3000);
+    const petals = ['🌸', '🌷', '🌺', '💮', '✨', '💖', '🎀'];
+    const count = isTouchDevice ? 30 : 55;
+    for (let i = 0; i < count; i += 1) {
+        const petal = document.createElement('div');
+        petal.className = 'confetti-petal';
+        petal.textContent = petals[Math.floor(Math.random() * petals.length)];
+        petal.style.left = `${Math.random() * 100}vw`;
+        petal.style.fontSize = `${Math.random() * 14 + 16}px`;
+        petal.style.setProperty('--drift', `${Math.random() * 280 - 140}px`);
+        petal.style.setProperty('--twirl', `${Math.random() * 980 - 490}deg`);
+        petal.style.setProperty('--fall-duration', `${Math.random() * 1.8 + 2.8}s`);
+        petal.style.animationDelay = `${Math.random() * 0.25}s`;
+        document.body.appendChild(petal);
+        setTimeout(() => petal.remove(), 5200);
     }
 }
