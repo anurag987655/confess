@@ -262,9 +262,11 @@ button {
     z-index: 2000;
     pointer-events: none;
     opacity: 0;
-    filter: drop-shadow(0 4px 8px rgba(214, 51, 132, 0.25));
+    filter: drop-shadow(0 3px 6px rgba(214, 51, 132, 0.18));
     will-change: transform, opacity;
-    animation: petalDance var(--fall-duration, 3.8s) cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    animation: petalDance var(--fall-duration, 3.8s) linear forwards;
 }
 
 @keyframes petalDance {
@@ -276,17 +278,23 @@ button {
         opacity: 1;
     }
     25% {
-        transform: translate3d(calc(var(--drift, 0px) * 0.25), 24vh, 0) rotate(calc(var(--twirl, 520deg) * 0.25)) scale(1);
+        transform: translate3d(calc(var(--drift, 0px) * 0.25), 25vh, 0) rotate(calc(var(--twirl, 520deg) * 0.25)) scale(1);
     }
     50% {
-        transform: translate3d(calc(var(--drift, 0px) * -0.15), 50vh, 0) rotate(calc(var(--twirl, 520deg) * 0.5)) scale(1.08);
+        transform: translate3d(calc(var(--drift, 0px) * -0.12), 52vh, 0) rotate(calc(var(--twirl, 520deg) * 0.5)) scale(1.04);
     }
     75% {
-        transform: translate3d(calc(var(--drift, 0px) * 0.65), 78vh, 0) rotate(calc(var(--twirl, 520deg) * 0.75)) scale(0.95);
+        transform: translate3d(calc(var(--drift, 0px) * 0.62), 80vh, 0) rotate(calc(var(--twirl, 520deg) * 0.75)) scale(0.96);
     }
     100% {
         opacity: 0;
         transform: translate3d(var(--drift, 0px), 112vh, 0) rotate(var(--twirl, 520deg)) scale(0.88);
+    }
+}
+
+@media (max-width: 768px) {
+    .confetti-petal {
+        filter: none;
     }
 }
 

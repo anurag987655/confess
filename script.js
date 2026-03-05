@@ -207,23 +207,25 @@ yesBtn.addEventListener('click', () => {
     if (stage) stage.classList.add('hidden');
     successMsg.classList.remove('hidden');
     document.body.classList.add('love-mode');
-    for (let i = 0; i < 6; i += 1) setTimeout(triggerConfetti, i * 350);
+    const bursts = isTouchDevice ? 4 : 6;
+    const burstDelay = isTouchDevice ? 420 : 320;
+    for (let i = 0; i < bursts; i += 1) setTimeout(triggerConfetti, i * burstDelay);
 });
 
 function triggerConfetti() {
     const petals = ['🌸', '🌷', '🌺', '💮', '✨', '💖', '🎀'];
-    const count = isTouchDevice ? 30 : 55;
+    const count = isTouchDevice ? 16 : 48;
     for (let i = 0; i < count; i += 1) {
         const petal = document.createElement('div');
         petal.className = 'confetti-petal';
         petal.textContent = petals[Math.floor(Math.random() * petals.length)];
         petal.style.left = `${Math.random() * 100}vw`;
-        petal.style.fontSize = `${Math.random() * 14 + 16}px`;
-        petal.style.setProperty('--drift', `${Math.random() * 280 - 140}px`);
-        petal.style.setProperty('--twirl', `${Math.random() * 980 - 490}deg`);
-        petal.style.setProperty('--fall-duration', `${Math.random() * 1.8 + 2.8}s`);
-        petal.style.animationDelay = `${Math.random() * 0.25}s`;
+        petal.style.fontSize = isTouchDevice ? `${Math.random() * 10 + 16}px` : `${Math.random() * 14 + 16}px`;
+        petal.style.setProperty('--drift', `${Math.random() * (isTouchDevice ? 180 : 280) - (isTouchDevice ? 90 : 140)}px`);
+        petal.style.setProperty('--twirl', `${Math.random() * 840 - 420}deg`);
+        petal.style.setProperty('--fall-duration', isTouchDevice ? `${Math.random() * 1.3 + 2.4}s` : `${Math.random() * 1.8 + 2.8}s`);
+        petal.style.animationDelay = `${Math.random() * (isTouchDevice ? 0.16 : 0.25)}s`;
         document.body.appendChild(petal);
-        setTimeout(() => petal.remove(), 5200);
+        setTimeout(() => petal.remove(), isTouchDevice ? 4200 : 5200);
     }
 }
