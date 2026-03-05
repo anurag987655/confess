@@ -1,0 +1,137 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+    background-size: 400% 400%;
+    animation: gradientBG 10s ease infinite;
+    font-family: 'Quicksand', sans-serif;
+    overflow: hidden;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.container {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 3rem 4rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.proposal-text {
+    font-family: 'Dancing Script', cursive;
+    font-size: 3.5rem;
+    color: #d63384;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.intro-line {
+    font-size: 1.2rem;
+    color: #9c2f64;
+    margin-bottom: 2rem;
+}
+
+.heart {
+    display: inline-block;
+    transform-origin: center;
+    animation: heartBeat 0.9s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(255, 0, 84, 0.45));
+}
+
+@keyframes heartBeat {
+    0%, 28%, 60%, 100% {
+        transform: scale(1);
+    }
+    12%, 44% {
+        transform: scale(1.32);
+    }
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    position: relative;
+    min-height: 50px;
+}
+
+button {
+    padding: 0.8rem 2.5rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+#yes-btn {
+    background: #ff4d6d;
+    color: white;
+}
+
+#yes-btn:hover {
+    transform: scale(1.1);
+    background: #ff0054;
+}
+
+#no-btn {
+    background: #f8f9fa;
+    color: #333;
+    position: relative;
+}
+
+#success-msg {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background: white;
+    padding: 4rem;
+    border-radius: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+#success-msg h1 {
+    font-size: 4rem;
+    color: #ff0054;
+    margin-bottom: 1rem;
+}
+
+#success-msg p {
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.success-line {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    color: #b11d58;
+}
+
+.hidden {
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+}
