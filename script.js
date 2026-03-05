@@ -8,6 +8,8 @@ const dangerRadius = 90;
 let lastPointerX = window.innerWidth / 2;
 let lastPointerY = window.innerHeight / 2;
 let isFloating = false;
+let noAttempts = 0;
+let lastScaleTick = 0;
 
 noBtn.tabIndex = -1;
 
@@ -85,7 +87,20 @@ function moveNoButton(pointerX = lastPointerX, pointerY = lastPointerY) {
     noBtn.style.right = 'auto';
     noBtn.style.bottom = 'auto';
     noBtn.style.zIndex = '9999';
-    noBtn.style.transition = 'left 0.08s linear, top 0.08s linear';
+    noBtn.style.transition = 'left 0.01s linear, top 0.01s linear';
+}
+
+function applyAttemptScaling() {
+    const yesScale = Math.min(1 + noAttempts * 0.28, 1.9);
+    const noScale = Math.max(1 - noAttempts * 0.22, 0.12);
+
+    yesBtn.style.transform = `scale(${yesScale})`;
+    noBtn.style.transform = `scale(${noScale})`;
+}
+
+function registerNoAttempt() {
+    noAttempts += 1;
+    applyAttemptScaling();
 }
 
 function maybeEvade(pointerX, pointerY) {
@@ -100,6 +115,11 @@ function maybeEvade(pointerX, pointerY) {
     const distance = Math.hypot(pointerX - centerX, pointerY - centerY);
 
     if (distance < dangerRadius) {
+        const now = Date.now();
+        if (now - lastScaleTick > 60) {
+            registerNoAttempt();
+            lastScaleTick = now;
+        }
         moveNoButton(pointerX, pointerY);
     }
 }
@@ -114,7 +134,9 @@ noBtn.addEventListener('mousemove', (event) => {
     lastPointerY = event.clientY;
     maybeEvade(event.clientX, event.clientY);
 });
-noBtn.addEventListener('touchstart', () => moveNoButton(), { passive: true });
+noBtn.addEventListener('touchstart', () => {
+    moveNoButton();
+}, { passive: true });
 
 window.addEventListener('mousemove', (event) => {
     lastPointerX = event.clientX;
